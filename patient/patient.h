@@ -9,7 +9,7 @@ typedef enum {
     ALLOCATED,
     TREATING,
     DONE
-} PatientState; [cite: 84]
+} PatientState;
 
 typedef struct Patient {
     char id[10];           // Format: BC-XXX
@@ -20,12 +20,13 @@ typedef struct Patient {
     int treatmentStartTime;
     PatientState state;
     
-    // For List usage
+    // สำหรับโครงสร้างข้อมูล Linked List / Aging List
     struct Patient *next;
     struct Patient *prev;
-} Patient; [cite: 84]
+} Patient;
 
-// Memory Management
+// --- Function Prototypes (เพิ่มส่วนนี้เข้าไปครับ) ---
+// ฟังก์ชันจัดการ Memory
 Patient* createPatient(const char* id, const char* name, int sev, int pain, int time);
 void destroyPatient(Patient** p);
 

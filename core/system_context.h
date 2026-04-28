@@ -5,21 +5,16 @@
 #include "../patient/patient.h"
 
 typedef struct {
-    // Time System 
-    int tickCount;           // จำนวน tick ที่สะสม
-    long baseTime;           // เวลาเริ่มต้นระบบ (Unix Timestamp)
-    long simulatedTime;      // baseTime + (tickCount * TICK_UNIT)
-
-    // Data Structures 
-    void* patientTable;      // Hash Table (Owner) 
-    void* triageQueue;       // Priority Queue (Binary Heap)
-    void* agingList;         // Linked List for Scanning
-    void* bedList;           // Doubly Linked List for Beds
-
-    // Counters
-    int patientCounter;      // สำหรับรัน BC-XXX
+    int tickCount;           
+    long baseTime;           
+    long simulatedTime;      // [cite: 90]
+    void* patientTable;      // Hash Table [cite: 130]
+    void* triageQueue;       // Binary Heap [cite: 135]
+    void* agingList;         // Linked List [cite: 140]
+    void* bedList;           // Doubly Linked List [cite: 144]
+    int patientCounter;      // สำหรับรัน BC-XXX [cite: 126]
 } SystemContext;
 
-extern SystemContext gSystem;
+extern SystemContext gSystem; // Global Context [cite: 274]
 
 #endif
