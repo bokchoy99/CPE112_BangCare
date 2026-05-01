@@ -31,7 +31,10 @@ void systemAddPatient(const char* name, int severity, int pain) {
 
     if (p) {
         sprintf(p->id, "%s%03d", ID_PREFIX, gSystem.patientCounter++);
+        hashTableInsert(gSystem.patientTable, p); 
+        printf("[HASH] %s stored in registry.\n", p->id);
         printf("[SUCCESS] Registered: %s (ID: %s)\n", p->name, p->id);
         // p->state = WAITING; [cite: 116]
+        
     }
 }
