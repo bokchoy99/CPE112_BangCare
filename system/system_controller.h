@@ -1,21 +1,11 @@
-#ifndef SYSTEM_CONTEXT_H
-#define SYSTEM_CONTEXT_H
+#ifndef SYSTEM_CONTROLLER_H
+#define SYSTEM_CONTROLLER_H
 
-#include <time.h>
-#include "../patient/patient.h"
+#include "../core/system_context.h" 
 
-typedef struct {
-    int tickCount;
-    long baseTime;
-    long simulatedTime;
-    void* patientTable;
-    void* triageQueue;
-    void* agingList;
-    void* bedList;
-    int patientCounter;
-} SystemContext;
 
-// ใช้ extern เพื่อบอกว่าตัวแปรนี้ถูกสร้างไว้ที่อื่น (ใน system_controller.c)
-extern SystemContext gSystem; 
+void systemAddPatient(const char* name, int severity, int pain);
+void systemTick(int n);
+void updateSimulatedTime();
 
 #endif

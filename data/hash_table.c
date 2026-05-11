@@ -13,7 +13,7 @@ HashTable* createHashTable() {
     return ht;
 }
 
-// hashFunction สำหรับ ID "BC-XXX" [cite: 13, 131]
+// hashFunction สำหรับ ID "BC-XXX"
 int hashFunction(const char* id) {
     unsigned long hash = 5381;
     int c;
@@ -51,5 +51,5 @@ Patient* hashTableLookup(HashTable* ht, const char* id) {
         }
         current = current->next;
     }
-    return NULL; // ไม่พบในระบบ [cite: 60, 374]
+    return NULL; // ไม่พบในระบบ 
 }
