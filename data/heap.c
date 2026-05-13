@@ -92,4 +92,15 @@ void destroyHeap(Heap* h) {
         free(h->data);
         free(h);
     }
+#include <stdio.h>
+
+// ใส่ไว้ก่อน (dummy ver)
+void heapInsert(Patient* p) {
+    // ยังไม่ต้องทำอะไร
+    printf("[DEBUG] heapInsert: %s\n", p->id);
+}
+
+void heapRemove(Patient* p) {
+    // ยังไม่ต้องทำอะไร
+    printf("[DEBUG] heapRemove: %s\n", p->id);
 }

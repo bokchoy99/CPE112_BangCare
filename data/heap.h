@@ -16,4 +16,7 @@ Patient* heapPop(Heap* h);
 int comparePriority(Patient* a, Patient* b);
 void destroyHeap(Heap* h);
 
+void heapInsert(Patient* p); 
+void heapRemove(Patient* p);
+
 #endif
