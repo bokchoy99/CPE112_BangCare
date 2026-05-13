@@ -8,13 +8,8 @@ void* createLinkedList() {
     return (void*)head;
 }
 
-void listInsert(void* headPtr, Patient* p) {
-    if (!headPtr || !p) return;
-    Patient** head = (Patient**)headPtr;
-
-    // แทรกที่หัว List (O(1))
+void linkedListInsert(Patient** head, Patient* p) { // เช็คการสะกดชื่อให้ตรงเป๊ะ
+    if (p == NULL) return;
     p->next = *head;
-    if (*head) (*head)->prev = p;
     *head = p;
-    p->prev = NULL;
 }

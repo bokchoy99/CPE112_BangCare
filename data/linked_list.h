@@ -4,6 +4,6 @@
 #include "../patient/patient.h"
 
 void* createLinkedList(); 
-void listInsert(void* head, Patient* p);
+void linkedListInsert(Patient** head, Patient* p);
 
 #endif

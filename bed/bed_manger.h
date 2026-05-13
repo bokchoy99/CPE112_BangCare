@@ -1,21 +1,17 @@
 #ifndef BED_SYSTEM_H
 #define BED_SYSTEM_H
 #include <stdbool.h>
+#include "../patient/patient.h" //
 
-// 5.1 Bed Structure (อัปเดตชื่อตัวแปรตามสเปก)
 typedef struct BedNode {
-    int idBed;              // เปลี่ยนชื่อให้ตรงตามสเปก (จากเดิม bedId)
-    char type[5];           // "ER" หรือ "OPD" (จากเดิม bedType)
-    bool isOccupied;        // สถานะเตียง (ว่าง/ไม่ว่าง)
-    
-    // pointer ไปหาคนไข้ (ใช้ void* ไปก่อนระหว่างรอรวมไฟล์ หากรวมแล้วเปลี่ยนเป็น Patient* ได้)
-    void* patient;          
-
-    struct BedNode* prev;   // สำหรับ Doubly Linked List
+    int idBed;              
+    char type[5];           
+    bool isOccupied;        
+    Patient* patient;        // เปลี่ยนจาก void* เป็น Patient*
+    struct BedNode* prev;   
     struct BedNode* next;   
 } BedNode;
 
-// โครงสร้างสำหรับคุม List
 typedef struct {
     BedNode* head;
     BedNode* tail;
@@ -23,10 +19,9 @@ typedef struct {
     int occupiedBeds;
 } BedList;
 
-// ประกาศฟังก์ชัน
 void initBeds();
 void displayBedAllocation();
-bool allocateBed(int severity); 
+bool allocateBed(Patient* p); // ปรับให้รับ Patient* แทน severity (เพราะ severity อยู่ในตัว p อยู่แล้ว)
 bool freeBed(int idBed);        
 
 #endif

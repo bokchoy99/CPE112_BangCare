@@ -1,17 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "bed_system.h"
-
-BedList* globalBedList = NULL; 
+#include "bed_manger.h" 
+#include "../core/system_context.h"
+#include "../utils/logger.h"
 
 void initBeds() {
-    globalBedList = (BedList*)malloc(sizeof(BedList));
-    globalBedList->head = NULL;
-    globalBedList->tail = NULL;
-    // 5.3 Capacity = 30 เตียง
-    globalBedList->totalBeds = 30;
-    globalBedList->occupiedBeds = 0;
+    gSystem.beds = (BedList*)malloc(sizeof(BedList));
+    gSystem.beds->head = NULL;
+    gSystem.beds->tail = NULL;
+    gSystem.beds->totalBeds = 30;
+    gSystem.beds->occupiedBeds = 0;
 
     for (int i = 1; i <= 30; i++) {
         BedNode* newNode = (BedNode*)malloc(sizeof(BedNode));
@@ -19,123 +18,91 @@ void initBeds() {
         newNode->isOccupied = false;
         newNode->patient = NULL;
         newNode->next = NULL;
-        newNode->prev = globalBedList->tail;
+        newNode->prev = gSystem.beds->tail;
 
-        // แบ่ง ER = 5 เตียง, OPD = 25 เตียง
         if (i <= 5) strcpy(newNode->type, "ER");
         else strcpy(newNode->type, "OPD");
 
-        if (globalBedList->tail != NULL) globalBedList->tail->next = newNode;
-        else globalBedList->head = newNode;
+        if (gSystem.beds->tail != NULL) gSystem.beds->tail->next = newNode;
+        else gSystem.beds->head = newNode;
         
-        globalBedList->tail = newNode;
+        gSystem.beds->tail = newNode;
     }
-    // หมายเหตุ 5.3: จำนวนหมอ 30 คน (1 หมอ : 1 เตียง) ถูกจัดการโดยปริยายผ่านจำนวนเตียงอยู่แล้ว
+    logEvent(LOG_SYSTEM, "BED_MGR", "30 Beds initialized (5 ER, 25 OPD)");
 }
 
-// 5.2 RULE: การรับคนเข้าเตียง
-bool allocateBed(int severity) {
-    if (globalBedList == NULL) return false;
-    BedNode* curr = globalBedList->head;
+bool allocateBed(Patient* p) {
+    if (gSystem.beds == NULL || p == NULL) return false;
+    BedNode* curr = gSystem.beds->head;
+    int severity = p->severity;
 
-    // กรณีที่ 1: Severity 5 (ต้องเข้า ER เท่านั้น)
+    // --- กฎการหาเตียง ---
     if (severity == 5) {
-        // วนหาเตียง ER (เตียง 1-5)
+        // หาใน ER ก่อน (เตียง 1-5)
         while (curr != NULL && strcmp(curr->type, "ER") == 0) {
             if (!curr->isOccupied) {
                 curr->isOccupied = true;
-                globalBedList->occupiedBeds++;
-                printf("[SUCCESS] Allocated ER Bed #%d for S5 Patient.\n", curr->idBed);
+                curr->patient = p;
+                gSystem.beds->occupiedBeds++;
+                logEvent(LOG_INFO, "BED_MGR", "S5 Patient assigned to ER bed");
                 return true;
             }
             curr = curr->next;
         }
-
-        // --- RULE 5.2: ถ้า ER เต็ม ต้อง Confirm ก่อนใช้ OPD ---
-        printf("\n[WARNING] All ER Beds are FULL!\n");
-        printf("Do you want to use an OPD bed for this S5 patient? (y/n): ");
-        char confirm;
-        scanf(" %c", &confirm); // มีเว้นวรรคหน้า %c เพื่อล้างปุ่ม Enter ในบัฟเฟอร์
-
-        if (confirm == 'y' || confirm == 'Y') {
-            // ถ้าตอบ y จะหาเตียง OPD ให้
-            while (curr != NULL) {
-                if (!curr->isOccupied) {
-                    curr->isOccupied = true;
-                    globalBedList->occupiedBeds++;
-                    printf("[SUCCESS] Allocated OPD Bed #%d for S5 Patient (Confirmed).\n", curr->idBed);
-                    return true;
-                }
-                curr = curr->next;
-            }
-            printf("[FAILED] OPD Beds are also FULL!\n");
-        } else {
-            printf("[INFO] Allocation cancelled. S5 Patient is waiting.\n");
-        }
-    } 
-    // กรณีที่ 2: Severity 1-4 (เข้า OPD)
-    else {
-        // เลื่อน pointer ข้ามเตียง ER ไปยัง OPD (เตียงที่ 6 ขึ้นไป)
-        while (curr != NULL && strcmp(curr->type, "ER") == 0) {
-            curr = curr->next;
-        }
-        // หาเตียง OPD ที่ว่าง
+        // ถ้า ER เต็ม (Logic ถาม Confirm อยู่ในส่วน UI ของเพื่อน)
+        // สำหรับฟังก์ชันนี้จะหาเตียง OPD ให้หาก ER เต็ม
         while (curr != NULL) {
             if (!curr->isOccupied) {
                 curr->isOccupied = true;
-                globalBedList->occupiedBeds++;
-                printf("[SUCCESS] Allocated OPD Bed #%d for S%d Patient.\n", curr->idBed, severity);
+                curr->patient = p;
+                gSystem.beds->occupiedBeds++;
+                logEvent(LOG_INFO, "BED_MGR", "S5 Patient assigned to OPD bed (ER Full)");
                 return true;
             }
             curr = curr->next;
         }
-        printf("[FAILED] All OPD Beds are FULL!\n");
+    } else {
+        // S1-4 หาใน OPD เท่านั้น
+        while (curr != NULL) {
+            if (strcmp(curr->type, "OPD") == 0 && !curr->isOccupied) {
+                curr->isOccupied = true;
+                curr->patient = p;
+                gSystem.beds->occupiedBeds++;
+                logEvent(LOG_INFO, "BED_MGR", "Patient assigned to OPD bed");
+                return true;
+            }
+            curr = curr->next;
+        }
     }
     return false;
 }
 
-// ฟังก์ชันเคลียร์เตียงให้ว่าง 
+// เพิ่มฟังก์ชันนี้เพื่อแก้ Error 'undefined reference to freeBed'
 bool freeBed(int idBed) {
-    if (globalBedList == NULL) return false;
-    BedNode* curr = globalBedList->head;
+    if (gSystem.beds == NULL) return false;
+    BedNode* curr = gSystem.beds->head;
     
     while (curr != NULL) {
         if (curr->idBed == idBed) {
             if (curr->isOccupied) {
                 curr->isOccupied = false;
                 curr->patient = NULL;
-                globalBedList->occupiedBeds--;
-                printf("[SUCCESS] Bed #%d (%s) is now EMPTY.\n", idBed, curr->type);
+                gSystem.beds->occupiedBeds--;
+                
+                char msg[64];
+                sprintf(msg, "Bed #%d is now free", idBed);
+                logEvent(LOG_INFO, "BED_MGR", msg);
+                printf("[SUCCESS] Bed #%d is now EMPTY.\n", idBed);
                 return true;
-            } else {
-                printf("[INFO] Bed #%d is already empty.\n", idBed);
-                return false;
             }
+            return false;
         }
         curr = curr->next;
     }
-    printf("[ERROR] Bed ID %d not found.\n", idBed);
     return false;
 }
 
-// แสดงสถานะเตียง
 void displayBedAllocation() {
-    if (globalBedList == NULL) return;
-    BedNode* curr = globalBedList->head;
-
-    printf("\n[ BED ALLOCATION: %d/30 ]\n", globalBedList->occupiedBeds);
-    
-    printf(" ER Beds (S5)   : ");
-    for (int i = 0; i < 5; i++) {
-        printf(curr->isOccupied ? "[ IN USE ]" : "[ EMPTY ]");
-        curr = curr->next;
-    }
-    printf("\n");
-
-    printf(" OPD Beds (S1-4): ");
-    for (int i = 0; i < 5; i++) { // โชว์ตัวอย่างแค่ 5 เตียง
-        printf(curr->isOccupied ? "[ IN USE ]" : "[ EMPTY ]");
-        curr = curr->next;
-    }
-    printf("... (Total 25)\n");
+    // ฟังก์ชันนี้จะถูกเรียกใช้ใน dashboard.c
+    // หากต้องการใช้การแสดงผลแบบใหม่ ให้ปล่อยว่างไว้หรือย้าย logic ไปไว้ที่ dashboard.c ครับ
 }

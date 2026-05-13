@@ -3,18 +3,19 @@
 
 #include <time.h>
 #include "../patient/patient.h"
+#include "../bed/bed_manger.h" // Include เพื่อให้รู้จัก BedList
 
 typedef struct {
     int tickCount;           
     long baseTime;           
-    long simulatedTime;      // [cite: 90]
-    void* patientTable;      // Hash Table [cite: 130]
-    void* triageQueue;       // Binary Heap [cite: 135]
-    void* agingList;         // Linked List [cite: 140]
-    void* bedList;           // Doubly Linked List [cite: 144]
-    int patientCounter;      // สำหรับรัน BC-XXX [cite: 126]
+    long simulatedTime;      
+    void* patientTable;      
+    void* triageQueue;       
+    void* agingList;         
+    BedList* beds;           // เปลี่ยนจาก void* bedList เป็น BedList* beds
+    int patientCounter;      
 } SystemContext;
 
-extern SystemContext gSystem; // Global Context [cite: 274]
+extern SystemContext gSystem; 
 
 #endif
