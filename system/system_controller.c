@@ -5,7 +5,7 @@
 #include "system_controller.h"
 #include "../core/config.h"
 #include "../patient/patient.h"
-#include "../data/hash_table.h" 
+#include "../data/hash_table.h"
 #include "../data/heap.h"
 #include "../data/linked_list.h"
 #include "../bed/bed_manager.h"
@@ -15,12 +15,12 @@
 
 // =======================================================
 // SECTION 0: GLOBAL FUNCTION & VARIABLES
-// เพื่อให้ฟังก์ชันข้างบนรู้จักฟังก์ชันที่อยู่ด้านล่าง
 // =======================================================
-void runAging(); 
+void runAging();
 void insertToAgingList(Patient* p);
 void removeFromAgingList(Patient* p);
 void updateBedTreatments();
+void systemAutoAllocate();
 
 SystemContext gSystem; 
 
@@ -39,57 +39,48 @@ void updateSimulatedTime() {
 }
 
 void systemTick(int n) {
-    //loop ตามจำนวน tick ที่พึ่งส่งเข้ามา
-    for(int i = 0; i < n; i++) {
-        gSystem.tickCount++; //เวลาในระบบเพิ่มขึ้น 1 tick
+    for (int i = 0; i < n; i++) {
+        gSystem.tickCount++;
         updateSimulatedTime();
-        updateBedTreatments();
-        
-        // [เพิ่ม] เรียกฟังก์ชันตรวจสอบ Aging ทุกคนในลิสต์
-        // scan ทุก 2 tick (10 นาที)
+
+        // FIX #1: aging วิ่งก่อน updateBedTreatments()
+        // เดิม: updateBedTreatments() → runAging()
+        // แก้:  runAging()            → updateBedTreatments()
+        // เหตุผล: autoAlloc อยู่ใน updateBedTreatments() ถ้าเรียกก่อน
+        //         ผู้ป่วยได้เตียงก่อนที่ aging จะ promote severity
+        //         ทำให้ state กลายเป็น ALLOCATED → aging skip → ไม่เห็น [AGING] log
         if (gSystem.tickCount % 2 == 0) {
             runAging();
         }
+        updateBedTreatments();
     }
 }
 
 // =======================================================
 // SECTION 2: Patient Registration
 // =======================================================
-
 void systemAddPatient(const char* name, int severity, int pain) {
-    // 1. สร้างคนไข้และจัดการ ID/Hash Table/Queue (โค้ดเดิมของคุณ)
     Patient* p = createPatient(NULL, name, severity, pain, gSystem.tickCount);
-
     if (p) {
-        // --- การตั้งค่าเบื้องต้น ---
-        sprintf(p->id, "%s%03d", ID_PREFIX, gSystem.patientCounter++); //สร้าง id
+        sprintf(p->id, "%s%03d", ID_PREFIX, gSystem.patientCounter++);
         p->state = IN_QUEUE;
-        p->arrivalTick = gSystem.tickCount; //p บันทึกว่าคนไข้เข้ามาตอนไหน
-        p->agingApplied = 0; //p ยังไม่เคยถูก aging
+        p->arrivalTick = gSystem.tickCount;
+        p->agingApplied = 0;
 
-        // --- การจัดเก็บข้อมูล (Data Structures) ---
-        // 1. เก็บใน Hash (สำหรับค้นหา)
         hashTableInsert((HashTable*)gSystem.patientTable, p);
-        
-        // เพิ่มเข้าheap priority q (ส่ง Heap* เข้าไปด้วยตามโครงสร้างใหม่)
-        heapInsert((Heap*)gSystem.triageQueue, p); 
-        
-        // ใส่เข้า aging list p
-        insertToAgingList(p); 
+        insertToAgingList(p);
 
-        // --- ระบบเตียง ---
-        // 2. ลิงก์เข้าสู่ระบบเตียงทันที (ส่วนที่ต้องเพิ่ม)
         bool allocated = allocateBed(p);
         if (allocated) {
-            p->state = ALLOCATED; 
+            // FIX #2 (ส่วนที่ 1): ถ้า S5 ถูก fallback ไป OPD
+            // allocateBed() จะ set state = ALLOCATED_OPD แล้ว
+            // ห้าม override เป็น ALLOCATED ปกติ มิเช่นนั้น aging จะ skip
+            if (p->state != ALLOCATED_OPD) {
+                p->state = ALLOCATED;
+            }
+        } else {
+            heapInsert((Heap*)gSystem.triageQueue, p);
         }
-        
-        //add log
-        char log_msg[128];
-        sprintf(log_msg, "Registered patient %s (%s) | Severity: S%d, Pain: %d | Status: %s", 
-                p->name, p->id, p->severity, p->pain, allocated ? "ADMITTED" : "QUEUED");
-        logEvent(LOG_INFO, "PATIENT", log_msg);
 
         printf("[SUCCESS] Registered: %s (ID: %s)\n", p->name, p->id);
     }
@@ -98,105 +89,87 @@ void systemAddPatient(const char* name, int severity, int pain) {
 // =======================================================
 // SECTION 3: Aging System Logic
 // =======================================================
-
-void runAging() { // aging system 
-
+void runAging() {
     Patient* current = (Patient*)gSystem.agingList;
+    while (current != NULL) {
+        Patient* next = current->next;
 
-    while (current != NULL) { // ทีละคน
-
-        Patient* next = current->next; //ไว้กัน list พังตอนแก้
-        
-        // next > คัดคน > aging
-        if (current->state != WAITING && current->state != IN_QUEUE) { //aging แค่คนที่ยังรอ
+        if (current->state != WAITING &&
+            current->state != IN_QUEUE &&
+            current->state != ALLOCATED_OPD) {
             current = next;
             continue;
-        } //aginf เฉพาะคนที่รอคิวอยู่ ไม่ยุ่งกับคนที่ได้เตียงแล้ว
-
-        int waitTicks = gSystem.tickCount - current->arrivalTick; //เวลารอ
-        int promoteLevel = waitTicks / AGING_THRESHOLD_TICKS; //level
-
-        //เช้คว่า 1. ถึงเวลา promoteแล้ว 2.severityยังไม่เกิน 5
-        if (promoteLevel > current->agingApplied && current->severity < 5) {
-            
-            // หมายเหตุ: การแก้ priority ใน heap ต้องเอาออกแล้วใส่ใหม่เพื่อให้มัน Re-sort
-            // heapRemove(current); //เอาออกจากheapก่อนแก้ priority (รอ Implement heapRemove)
-            
-            current->severity++; //เพิ่มฟามรุนแรง
-            
-            // ใส่กลับไปที่เดิมเพื่อให้ Heap เรียงลำดับใหม่
-            heapInsert((Heap*)gSystem.triageQueue, current); 
-            
-            current->agingApplied = promoteLevel; //บันทึกว่า aging เปลี่ยนไปแล้วกี่รอบ
-
-            //แสดงผล
-            printf("[AGING] %s -> S%d\n", current->id, current->severity);
         }
 
-        current = next; // คนต่อไป
+        int waitTicks    = gSystem.tickCount - current->arrivalTick;
+        int promoteLevel = waitTicks / AGING_THRESHOLD_TICKS;
+
+        if (promoteLevel > current->agingApplied && current->severity < 5) {
+            current->severity++;
+            if (current->state == IN_QUEUE) {
+                heapRemove((Heap*)gSystem.triageQueue, current); // เอาออกก่อน
+                heapInsert((Heap*)gSystem.triageQueue, current); // ใส่กลับใหม่
+            }
+            current->agingApplied = promoteLevel;
+            printf("[AGING] %s -> S%d\n", current->id, current->severity);
+
+        } else if (promoteLevel > current->agingApplied && current->severity == 5) {
+            current->agingApplied = promoteLevel;
+            printf("[CRITICAL] %s has been waiting too long! ER bed unavailable!\n", current->id);
+        }
+
+        current = next;
     }
 }
 
 // =======================================================
 // SECTION 4: Aging List Helpers (Linked List)
 // =======================================================
-
-void insertToAgingList(Patient* p) { //เอาคนไข้เข้าlist
-
+void insertToAgingList(Patient* p) {
     p->next = (Patient*)gSystem.agingList;
     p->prev = NULL;
-
     if (gSystem.agingList != NULL) {
         ((Patient*)gSystem.agingList)->prev = p;
     }
-
-    gSystem.agingList = p; //head list
+    gSystem.agingList = p;
 }
 
-void removeFromAgingList(Patient* p) { // get out f list
-
-    // ถ้ามีตัวก่อนหน้า
+void removeFromAgingList(Patient* p) {
     if (p->prev != NULL) {
         p->prev->next = p->next;
-    } 
-    else {
-        // ถ้า p เป็นตัวแรกของ list
+    } else {
         gSystem.agingList = p->next;
     }
-
-    // ถ้ามีตัวถัดไป
     if (p->next != NULL) {
         p->next->prev = p->prev;
     }
-
-    // ตัด p ออกจาก list
     p->next = NULL;
     p->prev = NULL;
 }
 
+// =======================================================
+// SECTION 5: Bed Treatment Timer
+// ลดเวลารักษาทุก tick และ free เตียงเมื่อรักษาเสร็จ
+// =======================================================
 void updateBedTreatments() {
     if (gSystem.beds == NULL) return;
     BedNode* curr = gSystem.beds->head;
-    
     while (curr != NULL) {
         if (curr->isOccupied && curr->patient != NULL) {
-            // ลดเวลาการรักษาลงทีละ 1 Tick
             curr->patient->treatmentRemaining--;
-            
-            // ถ้ารักษาเสร็จแล้ว (เวลาเหลือ 0 หรือน้อยกว่า)
+
             if (curr->patient->treatmentRemaining <= 0) {
                 Patient* p = curr->patient;
-                p->state = DONE; // ปรับสถานะเป็นรักษาเสร็จแล้ว
-                
-                // เอาออกจากคิวตรวจสอบ Aging ด้วยเพราะได้รักษาเสร็จแล้ว
-                removeFromAgingList(p); 
-                
-                // บันทึก Log และเคลียร์เตียงให้ว่าง
+                p->state = DONE;
+
+                removeFromAgingList(p);
+
                 char log_msg[100];
                 sprintf(log_msg, "Patient %s treatment complete. Freeing bed #%d", p->id, curr->idBed);
                 logEvent(LOG_INFO, "SYSTEM", log_msg);
-                
-                freeBed(curr->idBed); // เรียกฟังก์ชันคืนเตียงเดิมของคุณ
+
+                freeBed(curr->idBed);
+                systemAutoAllocate();
             }
         }
         curr = curr->next;
@@ -204,20 +177,30 @@ void updateBedTreatments() {
 }
 
 // =======================================================
-// SECTION 5: Display cmd
+// SECTION 6: Auto Allocate
 // =======================================================
+void systemAutoAllocate() {
+    while (1) {
+        Patient* p = heapPeek((Heap*)gSystem.triageQueue);
+        if (p == NULL) break;
 
-void systemPeekHash(const char* id) {
-    // ดึง Context เพื่อเข้าถึง HashTable ที่เก็บข้อมูลคนไข้ไว้
-    SystemContext* ctx = getSystemContext(); 
-    
-    // ใช้ฟังก์ชัน hashTableLookup ที่มีอยู่เพื่อหา Patient Pointer
-    Patient* p = hashTableLookup(ctx->patientTable, id);
-    
-    // เรียกใช้ฟังก์ชันแสดงผลที่เราเปลี่ยนชื่อใหม่
-    if (p != NULL) {
-        displayHashID(p);
-    } else {
-        printf("\n[SYSTEM] No data found for ID: %s\n", id);
+        heapPop((Heap*)gSystem.triageQueue);
+
+        bool allocated = allocateBed(p);
+        if (!allocated) {
+            heapInsert((Heap*)gSystem.triageQueue, p);
+            break;
+        }
+
+        // FIX #2 (ส่วนที่ 3): ถ้า S5 ได้ OPD จาก autoAlloc
+        // allocateBed() set state = ALLOCATED_OPD แล้ว — ห้าม override
+        if (p->state != ALLOCATED_OPD) {
+            p->state = ALLOCATED;
+        }
+
+        char msg[100];
+        sprintf(msg, "Auto-allocated bed for %s (S%d)", p->id, p->severity);
+        logEvent(LOG_INFO, "SYSTEM", msg);
+        printf("[AUTO-ALLOC] %s (S%d) assigned to bed\n", p->id, p->severity);
     }
 }
