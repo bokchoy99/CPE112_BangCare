@@ -10,10 +10,10 @@ void initBeds() {
     gSystem.beds = (BedList*)malloc(sizeof(BedList));
     gSystem.beds->head = NULL;
     gSystem.beds->tail = NULL;
-    gSystem.beds->totalBeds = 13;
+    gSystem.beds->totalBeds = 15;
     gSystem.beds->occupiedBeds = 0;
 
-    for (int i = 1; i <= 13; i++) {
+    for (int i = 1; i <= 15; i++) {
         BedNode* newNode = (BedNode*)malloc(sizeof(BedNode));
         newNode->idBed = i;
         newNode->isOccupied = false;
@@ -29,7 +29,7 @@ void initBeds() {
         
         gSystem.beds->tail = newNode;
     }
-    logEvent(LOG_SYSTEM, "BED_MGR", "30 Beds initialized (5 ER, 25 OPD)");
+    logEvent(LOG_SYSTEM, "BED_MGR", "15 Beds initialized (5 ER, 10 OPD)");
 }
 
 bool allocateBed(Patient* p) {
@@ -109,7 +109,7 @@ void fillAllBeds() {
     BedNode* curr = gSystem.beds->head;
     int dummy_count = 0;
 
-    // วนลูปผ่านเตียงทั้งหมดในระบบ (ซึ่งตอนนี้เปลี่ยนโครงสร้างเป็นมีทั้งหมด 13 เตียงแล้ว)
+    // วนลูปผ่านเตียงทั้งหมดในระบบ (ซึ่งตอนนี้เปลี่ยนโครงสร้างเป็นมีทั้งหมด 15 เตียงแล้ว)
     while (curr != NULL) {
         // ถ้าเตียงยังว่าง ให้สร้างคนไข้ Dummy เข้าไปใส่
         if (!curr->isOccupied) {
@@ -135,6 +135,6 @@ void fillAllBeds() {
         curr = curr->next;
     }
     
-    logEvent(LOG_SYSTEM, "BED_MGR", "All 13 beds have been forcefully filled with Dummy patients.");
-    printf("[SUCCESS] All remaining beds (3 ER / 10 OPD) are now FILLED with Dummy patients.\n");
+    logEvent(LOG_SYSTEM, "BED_MGR", "All 15 beds have been forcefully filled with Dummy patients.");
+    printf("[SUCCESS] All remaining beds (5 ER / 10 OPD) are now FILLED with Dummy patients.\n");
 }
