@@ -5,7 +5,7 @@
 #include "command.h"
 #include "../system/system_controller.h"
 #include "../core/system_context.h"
-#include "../bed/bed_manger.h"
+#include "../bed/bed_manager.h"
 
 
 bool processCommand(char* input) {
@@ -51,8 +51,8 @@ bool processCommand(char* input) {
         printf(" [ COMMANDS ]\n");
         printf("add <name> <severity> <pain> : Add patient into the system\n");
         printf("stat  : Show system statistics\n");
-        printf("tick <n> : Advance time by n unit (n x 5 minutes)\n");
-        printf("tick rec <n> : Advance time by n unit of recovery time (n x 25 minutes)\n");
+        printf("tick <n> : Advance time by n unit (n x 2min)\n");
+        printf("tick rec <n> : Advance time by n unit of recovery time (n x 10min)\n");
         printf("peek <sev_num> : View the number and list of patients in that specific severity level.\n");
         printf("peek <type_bed_num> : View details of the patient in that specific bed.\n");
         printf("peek hash <id> : View patient details and display current status.\n");
@@ -75,7 +75,7 @@ bool processCommand(char* input) {
         printf("Throughput: %d\n", 0);
         printf("===========================================================\n");
     }
-    else if (strcmp(command, "free") == 0) {
+    else if (strcmp(command, "free") == 0) { //ปลดคนไข้ออกจากเตียง
         if (numArgs >= 2) {
             int bedId = atoi(name); // ในที่นี้ name คือพารามิเตอร์ตัวที่สอง
             freeBed(bedId);

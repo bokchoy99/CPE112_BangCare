@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "bed_manger.h" 
+#include "bed_manager.h" 
 #include "../core/system_context.h"
 #include "../utils/logger.h"
 

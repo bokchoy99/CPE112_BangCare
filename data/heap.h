@@ -9,14 +9,16 @@ typedef struct {
     int capacity;     // ความจุสูงสุด
 } Heap;
 
-
+//Heap initialization
 Heap* initHeap(int capacity);
 void heapInsert(Heap* h, Patient* p);
 Patient* heapPop(Heap* h);
-int comparePriority(Patient* a, Patient* b);
-void destroyHeap(Heap* h);
 
-void heapInsert(Patient* p); 
+//Priority Logic 
+int comparePriority(Patient* a, Patient* b);
+
+//After got allocated
+void destroyHeap(Heap* h);
 void heapRemove(Patient* p);
 
 #endif
