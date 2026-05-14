@@ -11,26 +11,31 @@
  * แสดง ID คนไข้ 3 คนล่าสุดที่เพิ่งเข้าสู่ระบบ
  */
 void displayUpcomingStream() {
-    // Cast agingList ให้เป็น Patient** เพื่อเข้าถึงหัว List
-    Patient** headPtr = (Patient**)gSystem.agingList;
+    Patient* curr = (Patient*)gSystem.agingList; 
     
-    if (headPtr == NULL || *headPtr == NULL) {
+    if (curr == NULL) {
         printf("Empty");
         return;
     }
 
-    Patient* curr = *headPtr;
     Patient* stream[3] = {NULL, NULL, NULL};
     int count = 0;
 
-    // เก็บ 3 คนล่าสุด
+    // แก้ไขโลจิคตรงนี้: กรองเฉพาะคนที่ยังไม่ได้เตียง
     while (curr != NULL && count < 3) {
-        stream[count] = curr;
+        // ตรวจสอบสถานะ: ต้องยังไม่ได้เตียง (ALLOCATED)
+        if (curr->state == WAITING || curr->state == IN_QUEUE) {
+            stream[count] = curr;
+            count++;
+        }
         curr = curr->next;
-        count++;
     }
 
-    // แสดงผลจากเก่าไปใหม่ (เช่น 002 <- 003 <- 004)
+    if (count == 0) {
+        printf("Empty");
+        return;
+    }
+
     for (int i = count - 1; i >= 0; i--) {
         if (stream[i] != NULL) {
             printf("%s", stream[i]->id); 
@@ -55,11 +60,10 @@ void displayDashboard() {
     // แสดงจำนวนเตียงที่ใช้จริงจาก BedManager
     int occupied = (gSystem.beds != NULL) ? gSystem.beds->occupiedBeds : 0;
     
-    printf(" Beds: [%02d/30] | Tick: %d (%d min) | Time: %s\n", 
-            occupied,
-            gSystem.tickCount,
-            gSystem.tickCount * TICK_UNIT_MINUTES,
-            buffer);
+    long totalMinutes = (gSystem.simulatedTime - gSystem.baseTime) / 60;
+
+    printf(" Beds: [%02d/13] | Tick: %d (%ld min) | Time: %s\n", 
+        occupied, gSystem.tickCount, totalMinutes, buffer);
 
     printf(" [ BED ALLOCATION ]\n");
 
@@ -68,7 +72,7 @@ void displayDashboard() {
 
         // ER Beds (1-5)
         printf(" ER Beds (S5)   : ");
-        for (int i = 0; i < 5 && curr != NULL; i++) {
+        for (int i = 0; i < 3 && curr != NULL; i++) {
             if (curr->isOccupied && curr->patient != NULL) {
                 printf("[%s]", curr->patient->id); 
             } else {
@@ -88,7 +92,7 @@ void displayDashboard() {
             }
             curr = curr->next;
         }
-        printf("... (Total 25)\n");
+        printf("... (Total 10)\n");
     }
 
     printf("-----------------------------------------------------------\n");

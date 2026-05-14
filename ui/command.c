@@ -26,9 +26,24 @@ bool processCommand(char* input) {
             printf("\n[ERROR] Usage: add <name> <severity> <pain>\n");
         }
     } 
-        // เดี๋ยวแก้อีกที
     else if (strcmp(command, "tick") == 0) {
-        systemTick(1);
+        // ตรวจสอบว่ามี parameter ต่อท้ายไหม (เช่น tick rec 5 หรือ tick 5)
+        char subCommand[20];
+        int units = 0;
+
+        // tick rec <n>: time forward 5*n ticks
+        if (sscanf(input, "%s %s %d", command, subCommand, &units) == 3) {
+            if (strcmp(subCommand, "rec") == 0) {
+                systemTick(units * 2); 
+                printf("[SYSTEM] Advanced % d units of recovery time (% d minutes).\n", units, units * 10);
+            }
+        }
+        // tick <n>
+        else if (sscanf(input, "%s %d", command, &units) == 2) {
+            // tick <n>: time forward n ticks
+            systemTick(units);
+            printf("[SYSTEM] Advanced % d ticks (% d minutes).\n", units, units * 5);
+        }
     }
     else if (strcmp(command, "about") == 0) { //About
         printf("\033[H\033[J");
@@ -80,6 +95,9 @@ bool processCommand(char* input) {
             int bedId = atoi(name); // ในที่นี้ name คือพารามิเตอร์ตัวที่สอง
             freeBed(bedId);
         }
+    }
+    else if (strcmp(command, "fillbeds") == 0) {
+        fillAllBeds(); // เรียกฟังก์ชันทำให้เตียงเต็ม
     }
     else if (strlen(command) > 1) {
         printf("\n[ERROR] Unknown Command: '%s'\n", command);

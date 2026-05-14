@@ -18,6 +18,7 @@ typedef struct Patient {
     int pain;              // 1-10
     int arrivalTime;       // in ticks
     int treatmentStartTime;
+    int treatmentRemaining;
 //p
     int arrivalTick; // use with aging (ใช้เฉพาะ aging system)
     int agingApplied; // กันมันเพิ่มซ้ำ

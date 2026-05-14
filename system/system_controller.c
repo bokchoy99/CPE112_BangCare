@@ -9,6 +9,7 @@
 #include "../data/heap.h"
 #include "../data/linked_list.h"
 #include "../bed/bed_manager.h"
+#include "../utils/logger.h"
 
 // =======================================================
 // SECTION 0: GLOBAL FUNCTION & VARIABLES
@@ -17,6 +18,7 @@
 void runAging(); 
 void insertToAgingList(Patient* p);
 void removeFromAgingList(Patient* p);
+void updateBedTreatments();
 
 // =======================================================
 // SECTION 1: Time Management
@@ -34,6 +36,7 @@ void systemTick(int n) {
     for(int i = 0; i < n; i++) {
         gSystem.tickCount++; //เวลาในระบบเพิ่มขึ้น 1 tick
         updateSimulatedTime();
+        updateBedTreatments();
         
         // [เพิ่ม] เรียกฟังก์ชันตรวจสอบ Aging ทุกคนในลิสต์
         // scan ทุก 2 tick (10 นาที)
@@ -70,8 +73,10 @@ void systemAddPatient(const char* name, int severity, int pain) {
 
         // --- ระบบเตียง ---
         // 2. ลิงก์เข้าสู่ระบบเตียงทันที (ส่วนที่ต้องเพิ่ม)
-        bool allocated = allocateBed(p); // ส่งตัวแปร Patient ไปจองเตียง
-        
+        bool allocated = allocateBed(p);
+        if (allocated) {
+            p->state = ALLOCATED; 
+        }        
         printf("[SUCCESS] Registered: %s (ID: %s)\n", p->name, p->id);
     }
 }
@@ -153,4 +158,33 @@ void removeFromAgingList(Patient* p) { // get out f list
     // ตัด p ออกจาก list
     p->next = NULL;
     p->prev = NULL;
+}
+
+void updateBedTreatments() {
+    if (gSystem.beds == NULL) return;
+    BedNode* curr = gSystem.beds->head;
+    
+    while (curr != NULL) {
+        if (curr->isOccupied && curr->patient != NULL) {
+            // ลดเวลาการรักษาลงทีละ 1 Tick
+            curr->patient->treatmentRemaining--;
+            
+            // ถ้ารักษาเสร็จแล้ว (เวลาเหลือ 0 หรือน้อยกว่า)
+            if (curr->patient->treatmentRemaining <= 0) {
+                Patient* p = curr->patient;
+                p->state = DONE; // ปรับสถานะเป็นรักษาเสร็จแล้ว
+                
+                // เอาออกจากคิวตรวจสอบ Aging ด้วยเพราะได้รักษาเสร็จแล้ว
+                removeFromAgingList(p); 
+                
+                // บันทึก Log และเคลียร์เตียงให้ว่าง
+                char log_msg[100];
+                sprintf(log_msg, "Patient %s treatment complete. Freeing bed #%d", p->id, curr->idBed);
+                logEvent(LOG_INFO, "SYSTEM", log_msg);
+                
+                freeBed(curr->idBed); // เรียกฟังก์ชันคืนเตียงเดิมของคุณ
+            }
+        }
+        curr = curr->next;
+    }
 }

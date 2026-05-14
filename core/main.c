@@ -22,7 +22,7 @@ void initSystem() {
     gSystem.patientTable = createHashTable();
 
     gSystem.triageQueue = initHeap(100);    // Priority Queue
-    gSystem.agingList = createLinkedList(); // Linked list สำหรับ Aging/Stream
+    gSystem.agingList = NULL; // Linked list สำหรับ Aging/Stream
     
     initBeds();
     initLogger();

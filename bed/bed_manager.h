@@ -23,6 +23,7 @@ typedef struct {
 void initBeds();
 void displayBedAllocation();
 bool allocateBed(Patient* p); 
-bool freeBed(int idBed);        
+bool freeBed(int idBed);  
+void fillAllBeds();      
 
 #endif
