@@ -21,7 +21,7 @@ void initBeds() {
         newNode->next = NULL;
         newNode->prev = gSystem.beds->tail;
 
-        if (i <= 5) strcpy(newNode->type, "ER");
+        if (i <= 3) strcpy(newNode->type, "ER");
         else strcpy(newNode->type, "OPD");
 
         if (gSystem.beds->tail != NULL) gSystem.beds->tail->next = newNode;

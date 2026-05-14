@@ -1,0 +1,1 @@
+Hello YOKOSO KIRA KIRA DOKI DOKI MOCHI MOCHI PUYO PUYO WAKU WAKU WASHOII NA WONDER STAGE YE!!                                          

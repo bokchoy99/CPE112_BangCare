@@ -76,7 +76,14 @@ void systemAddPatient(const char* name, int severity, int pain) {
         bool allocated = allocateBed(p);
         if (allocated) {
             p->state = ALLOCATED; 
-        }        
+        }
+        
+        //add log
+        char log_msg[128];
+        sprintf(log_msg, "Registered patient %s (%s) | Severity: S%d, Pain: %d | Status: %s", 
+                p->name, p->id, p->severity, p->pain, allocated ? "ADMITTED" : "QUEUED");
+        logEvent(LOG_INFO, "PATIENT", log_msg);
+
         printf("[SUCCESS] Registered: %s (ID: %s)\n", p->name, p->id);
     }
 }
