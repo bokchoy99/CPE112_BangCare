@@ -21,4 +21,7 @@ typedef struct {
 
 extern SystemContext gSystem; 
 
+// ประกาศ Getter เผื่อไว้ใช้ในบางจุด
+SystemContext* getSystemContext();
+
 #endif

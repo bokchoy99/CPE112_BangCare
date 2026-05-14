@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "system_controller.h"
-#include "../core/system_context.h"
 #include "../core/config.h"
 #include "../patient/patient.h"
 #include "../data/hash_table.h" 
@@ -10,6 +10,8 @@
 #include "../data/linked_list.h"
 #include "../bed/bed_manager.h"
 #include "../utils/logger.h"
+#include "../core/system_context.h" 
+#include "../ui/command.h"
 
 // =======================================================
 // SECTION 0: GLOBAL FUNCTION & VARIABLES
@@ -20,12 +22,17 @@ void insertToAgingList(Patient* p);
 void removeFromAgingList(Patient* p);
 void updateBedTreatments();
 
+SystemContext gSystem; 
+
+SystemContext* getSystemContext() {
+    return &gSystem;
+}
+
 // =======================================================
 // SECTION 1: Time Management
 // =======================================================
 
 // สร้างตัวแปร gSystem ไว้ที่นี่
-SystemContext gSystem; 
 
 void updateSimulatedTime() {
     gSystem.simulatedTime = gSystem.baseTime + (gSystem.tickCount * TICK_UNIT_MINUTES * 60);
@@ -193,5 +200,24 @@ void updateBedTreatments() {
             }
         }
         curr = curr->next;
+    }
+}
+
+// =======================================================
+// SECTION 5: Display cmd
+// =======================================================
+
+void systemPeekHash(const char* id) {
+    // ดึง Context เพื่อเข้าถึง HashTable ที่เก็บข้อมูลคนไข้ไว้
+    SystemContext* ctx = getSystemContext(); 
+    
+    // ใช้ฟังก์ชัน hashTableLookup ที่มีอยู่เพื่อหา Patient Pointer
+    Patient* p = hashTableLookup(ctx->patientTable, id);
+    
+    // เรียกใช้ฟังก์ชันแสดงผลที่เราเปลี่ยนชื่อใหม่
+    if (p != NULL) {
+        displayHashID(p);
+    } else {
+        printf("\n[SYSTEM] No data found for ID: %s\n", id);
     }
 }
