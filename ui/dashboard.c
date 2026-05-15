@@ -56,35 +56,22 @@ void displayDashboard() {
     printf("\n===========================================================\n");
     printf("       BANGCARE: HOSPITAL TRIAGE MANAGEMENT SYSTEM         \n");
     printf("===========================================================\n");
-    
-    // แสดงจำนวนเตียงที่ใช้จริงจาก BedManager
+
     int occupied = (gSystem.beds != NULL) ? gSystem.beds->occupiedBeds : 0;
-    
     long totalMinutes = (gSystem.simulatedTime - gSystem.baseTime) / 60;
 
-    printf(" Beds: [%02d/13] | Tick: %d (%ld min) | Time: %s\n", 
-        occupied, gSystem.tickCount, totalMinutes, buffer);
+    // แก้ 13 → MAX_ER_BEDS + MAX_OPD_BEDS
+    printf(" Beds: [%02d/%d] | Tick: %d (%ld min) | Time: %s\n",
+        occupied, MAX_ER_BEDS + MAX_OPD_BEDS, gSystem.tickCount, totalMinutes, buffer);
 
     printf(" [ BED ALLOCATION ]\n");
 
     if (gSystem.beds != NULL) {
         BedNode* curr = gSystem.beds->head;
 
-        // ER Beds (1-5)
-        printf(" ER Beds (S5)   : ");
-        for (int i = 0; i < 3 && curr != NULL; i++) {
-            if (curr->isOccupied && curr->patient != NULL) {
-                printf("[%s]", curr->patient->id); 
-            } else {
-                printf("[  -  ]");
-            }
-            curr = curr->next;
-        }
-        printf("\n");
-
-        // OPD Beds (ตัวอย่าง 5 เตียงแรกจาก 25)
-        printf(" OPD Beds (S1-4): ");
-        for (int i = 0; i < 5 && curr != NULL; i++) {
+        // ER Beds — วนตาม MAX_ER_BEDS
+        printf(" ER Beds  (S5)  : ");
+        for (int i = 0; i < MAX_ER_BEDS && curr != NULL; i++) {
             if (curr->isOccupied && curr->patient != NULL) {
                 printf("[%s]", curr->patient->id);
             } else {
@@ -92,7 +79,19 @@ void displayDashboard() {
             }
             curr = curr->next;
         }
-        printf("... (Total 10)\n");
+        printf("\n");
+
+        // OPD Beds — วนตาม MAX_OPD_BEDS
+        printf(" OPD Beds (S1-4): ");
+        for (int i = 0; i < MAX_OPD_BEDS && curr != NULL; i++) {
+            if (curr->isOccupied && curr->patient != NULL) {
+                printf("[%s]", curr->patient->id);
+            } else {
+                printf("[  -  ]");
+            }
+            curr = curr->next;
+        }
+        printf("\n");
     }
 
     printf("-----------------------------------------------------------\n");

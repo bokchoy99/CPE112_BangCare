@@ -5,8 +5,16 @@
 #define RECOVERY_TICK_MINUTES 10   // recovery = 10 mins 
 #define AGING_THRESHOLD_TICKS 5    // threshold to change severity
 
-#define MAX_ER_BEDS 3            
-#define MAX_OPD_BEDS 10            
+#define MAX_ER_BEDS 5            
+#define MAX_OPD_BEDS 10 
+
+#define TREAT_TIME_S5   15   // 30 นาที (15 tick × 2 นาที)
+#define TREAT_TIME_S4   10   // 20 นาที
+#define TREAT_TIME_S3   7    // 14 นาที
+#define TREAT_TIME_S2   5    // 10 นาที
+#define TREAT_TIME_S1   5    // 10 นาที
+
+
 #define HASH_TABLE_SIZE 101        
 #define ID_PREFIX "BC-"            
 

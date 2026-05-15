@@ -10,34 +10,10 @@
 #include "../bed/bed_manager.h"
 #include "../data/hash_table.h"
 
-/*-------------------------------------------
-    GLOBSL DECLARATION
----------------------------------------------*/
-
-void systemPeekSeverity(int sev);
-void systemPeekBed(int bedId);
-void systemPeekAging();
-void systemPeekHash(const char* id);
-/*-------------------------------------------
-    Function UI Helper
----------------------------------------------*/
-/* ABOUT
-*/
-void displayAbout() {
-    printf("\033[H\033[J"); // Clear screen
-    printf("\n=====================================\n");
-    printf(" [ PROJECT INFORMATION ]\n");
-    printf(" Project Name: BangCare (CPE112_BangCare)\n");
-    printf(" Description : An Emergency Room triage management system\n");
-    printf("               designed to optimize bed resources and\n");
-    printf("               minimize patient waiting times.\n");
-    printf(" Version      : 2.1 (5/14/2026)\n");
-    printf(" Developers   : 68070503412 Karnsinee Nikrotamethanee\n");
-    printf("                68070503422 Nichapa Piromying\n");
-    printf("                68070503475 Patchara Nimittakunchai\n");
-    printf("                68070503478 Patteera Pattaraporntaweewat\n");
-    printf("=====================================\n");
-}
+bool processCommand(char* input) {
+    char command[20], name[100];
+    int severity, pain;
+    int numArgs = sscanf(input, "%s %s %d %d", command, name, &severity, &pain);
 
 /* HELP
 */
@@ -192,37 +168,23 @@ void handlePeek(char* input) {
         printf("[ERROR] Usage: peek <sev|bed_id|aging|hash>\n");
         return;
     }
-
-    if (strcmp(sub, "aging") == 0) {
-        systemPeekAging(); // ฟังก์ชันสมมติในระบบของคุณ
-    } 
-    else if (strcmp(sub, "hash") == 0 && numArgs == 3) {
-        systemPeekHash(extra); // extra คือ id
-    } 
-    else {
-        // ตรวจสอบว่าเป็นตัวเลข (Severity หรือ Bed ID)
-        int val = atoi(sub);
-        if (val > 0 && val <= 5) {
-            systemPeekSeverity(val);
-        } else {
-            systemPeekBed(val);
-        }
+    else if (strcmp(command, "stat") == 0) {
+        printf("\033[H\033[J");
+        printf("\n===========================================================\n");
+        printf("[ STATISTICS ]\n");
+        printf("Resource Utilization: %d%%\n", 67);
+        printf("Triage Success Rate: %d\n", 67);
+        printf("Average Wait Time: %.2f\n", 4.8);
+        printf("Max Waiting Time: %.2f\n", 6.7);
+        printf("Aging Impact: %d\n", 0);
+        printf("Throughput: %d\n", 0);
+        printf("===========================================================\n");
     }
-}
-
-void systemPeekSeverity(int sev) {
-    // ดึงหัว List จาก AgingList มากรอง
-    displaySeverityList(sev, (Patient*)gSystem.agingList);
-}
-
-void systemPeekBed(int bedId) {
-    if (gSystem.beds == NULL) return;
-
-    BedNode* curr = gSystem.beds->head;
-    while (curr != NULL) {
-        if (curr->idBed == bedId) {
-            displayBedDetail(curr);
-            return;
+    else if (strcmp(command, "free") == 0) {
+        if (numArgs >= 2) {
+            int bedId = atoi(name);
+            freeBed(bedId);
+            systemAutoAllocate(); // พอเตียงว่าง ดึงคนในคิวมาใส่ทันที
         }
         curr = curr->next;
     }
@@ -270,7 +232,7 @@ bool processCommand(char* input) {
         else printf("[ERROR] Usage: free <bed_id>\n");
     }
     else if (strcmp(command, "fillbeds") == 0) {
-        fillAllBeds();
+        fillAllBeds(); // จำลองเตียงเต็มสำหรับ demo
     }
     else if (strlen(command) > 0) {
         printf("\n[ERROR] Unknown Command: '%s'\n", command);
