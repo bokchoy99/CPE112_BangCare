@@ -16,8 +16,7 @@ typedef struct Patient {
     char name[100];
     int severity;          // 1-5
     int pain;              // 1-10
-    int arrivalTime;       // in ticks
-    char arrivalTime[6];
+    char arrivalTime[10];
     int treatmentStartTime;
     int treatmentRemaining;
 //p

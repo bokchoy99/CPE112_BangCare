@@ -124,7 +124,7 @@ void displayAgingAnalysis(Patient* list) {
     Patient* curr = list;
     while (curr != NULL) {
         if (curr->state == WAITING || curr->state == IN_QUEUE) {
-            int waitTicks = gSystem.tickCount - current->arrivalTick;
+            int waitTicks = gSystem.tickCount - curr->arrivalTick;
             int ticksToNext = 5 - (waitTicks % 5); // อิงตาม AGING_THRESHOLD_TICKS
 
             if (ticksToNext <= 2) {

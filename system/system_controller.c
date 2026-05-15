@@ -68,6 +68,10 @@ void systemAddPatient(const char* name, int severity, int pain) {
         p->arrivalTick = gSystem.tickCount; //p บันทึกว่าคนไข้เข้ามาตอนไหน
         p->agingApplied = 0; //p ยังไม่เคยถูก aging
 
+        time_t t = (time_t)gSystem.simulatedTime;
+        struct tm *tm_info = localtime(&t);
+        strftime(p->arrivalTime, sizeof(p->arrivalTime), "%H:%M", tm_info);
+        
         // --- การจัดเก็บข้อมูล (Data Structures) ---
         // 1. เก็บใน Hash (สำหรับค้นหา)
         hashTableInsert((HashTable*)gSystem.patientTable, p);
@@ -212,7 +216,7 @@ void systemPeekHash(const char* id) {
     SystemContext* ctx = getSystemContext(); 
     
     // ใช้ฟังก์ชัน hashTableLookup ที่มีอยู่เพื่อหา Patient Pointer
-    Patient* p = hashTableLookup(ctx->patientTable, id);
+    Patient* p = hashTableLookup((HashTable*)ctx->patientTable, id);
     
     // เรียกใช้ฟังก์ชันแสดงผลที่เราเปลี่ยนชื่อใหม่
     if (p != NULL) {
