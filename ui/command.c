@@ -11,12 +11,11 @@
 #include "../data/hash_table.h"
 
 bool processCommand(char* input) {
-    char command[20], name[100];
+    char cmd[20], name[100];
     int severity, pain;
-    int numArgs = sscanf(input, "%s %s %d %d", command, name, &severity, &pain);
-
-/* HELP
-*/
+    int numArgs = sscanf(input, "%s %s %d %d", cmd, name, &severity, &pain);
+}
+/* HELP */
 void displayHelp() {
     printf("\033[H\033[J");
     printf("\n=====================================\n");
@@ -30,7 +29,7 @@ void displayHelp() {
     printf("peek hash <id>: View patient details by ID\n");
     printf("peek aging   : View patients near score adjustment threshold\n");
     printf("about        : Show project info\n");
-    printf("cmd          : Show all command\n");
+    printf("cmd          : Show all cmd\n");
     printf("exit         : Close program\n");
     printf("=====================================\n");
 }
@@ -65,13 +64,18 @@ void displaySeverityList(int sev, Patient* list) {
             printf(" [%d] ID: %s | Name: %-15s | Pain: %d | State: %d\n", 
                    ++count, curr->id, curr->name, curr->pain, curr->state);
         }
-        curr = curr->next;
-    }
-    
-    if (count == 0) printf(" No patients found in this severity level.\n");
-    printf("=====================================\n");
-}
+    } 
+    else if (strcmp(command, "tick") == 0) {
+        char subCommand[20];
+        int units = 0;
 
+<<<<<<<<< Temporary merge branch 1
+        // tick rec <n>: เดินเวลา recovery
+        if (sscanf(input, "%s %s %d", command, subCommand, &units) == 3) {
+            if (strcmp(subCommand, "rec") == 0) {
+                systemTick(units * 2); 
+                printf("[SYSTEM] Advanced %d units of recovery time (%d minutes).\n", units, units * 10);
+=========
 //Peek BedID
 void displayBedDetail(BedNode* bed) {
     printf("\n=====================================\n");
@@ -168,7 +172,7 @@ void handlePeek(char* input) {
         printf("[ERROR] Usage: peek <sev|bed_id|aging|hash>\n");
         return;
     }
-    else if (strcmp(command, "stat") == 0) {
+    else if (strcmp(cmd, "stat") == 0) {
         printf("\033[H\033[J");
         printf("\n===========================================================\n");
         printf("[ STATISTICS ]\n");
@@ -180,15 +184,15 @@ void handlePeek(char* input) {
         printf("Throughput: %d\n", 0);
         printf("===========================================================\n");
     }
-    else if (strcmp(command, "free") == 0) {
+    else if (strcmp(cmd, "free") == 0) {
         if (numArgs >= 2) {
-            int bedId = atoi(name);
-            freeBed(bedId);
+            int bedID = atoi(name);
+            freeBed(bedID);
             systemAutoAllocate(); // พอเตียงว่าง ดึงคนในคิวมาใส่ทันที
         }
         curr = curr->next;
     }
-    printf("\n[ERROR] Bed ID %d not found in system.\n", bedId);
+    printf("\n[ERROR] Bed ID %d not found in system.\n", bedID);
 }
 
 void systemPeekAging() {
@@ -200,42 +204,42 @@ void systemPeekAging() {
 ---------------------------------------------*/
 
 bool processCommand(char* input) {
-    char command[20], arg1[100];
+    char cmd[20], arg1[100];
     int arg2, arg3;
-    int numArgs = sscanf(input, "%s %s %d %d", command, arg1, &arg2, &arg3);
+    int numArgs = sscanf(input, "%s %s %d %d", cmd, arg1, &arg2, &arg3);
 
     // 1. Exit Check
-    if (strcmp(command, "exit") == 0) return false;
+    if (strcmp(cmd, "exit") == 0) return false;
 
     // 2. Command Dispatcher ตัวเช็คว่ามีไรต่อท้ายcmdไหม
-    if (strcmp(command, "add") == 0) {
+    if (strcmp(cmd, "add") == 0) {
         if (numArgs == 4) systemAddPatient(arg1, arg2, arg3);
         else printf("\n[ERROR] Usage: add <name> <severity> <pain>\n");
     } 
-    else if (strcmp(command, "tick") == 0) {
+    else if (strcmp(cmd, "tick") == 0) {
         handleTick(input);
     } 
-    else if (strcmp(command, "peek") == 0) {
+    else if (strcmp(cmd, "peek") == 0) {
         handlePeek(input);
     }
-    else if (strcmp(command, "stat") == 0) {
+    else if (strcmp(cmd, "stat") == 0) {
         displayStats();
     }
-    else if (strcmp(command, "about") == 0) {
+    else if (strcmp(cmd, "about") == 0) {
         displayAbout();
     }
-    else if (strcmp(command, "cmd") == 0) {
+    else if (strcmp(cmd, "cmd") == 0) {
         displayHelp();
     }
-    else if (strcmp(command, "free") == 0) {
+    else if (strcmp(cmd, "free") == 0) {
         if (numArgs >= 2) freeBed(atoi(arg1));
         else printf("[ERROR] Usage: free <bed_id>\n");
     }
-    else if (strcmp(command, "fillbeds") == 0) {
+    else if (strcmp(cmd, "fillbeds") == 0) {
         fillAllBeds(); // จำลองเตียงเต็มสำหรับ demo
     }
-    else if (strlen(command) > 0) {
-        printf("\n[ERROR] Unknown Command: '%s'\n", command);
+    else if (strlen(cmd) > 0) {
+        printf("\n[ERROR] Unknown Command: '%s'\n", cmd);
     }
 
     return true;

@@ -13,7 +13,7 @@ void displayAgingAnalysis(Patient* list);
 
 // ส่วน System Logic (เรียกใช้ใน handlePeek)
 void systemPeekSeverity(int sev);
-void systemPeekBed(int bedId);
+void systemPeekBed(int bedID);
 void systemPeekAging();
 void systemPeekHash(const char* id);
 
