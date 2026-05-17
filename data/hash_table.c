@@ -3,8 +3,12 @@
 #include <string.h>
 #include "hash_table.h"
 
-// ฟังก์ชันสร้าง Table [cite: 9, 40]
-HashTable* createHashTable() {
+/*
+ * createHashTable
+ * Allocates and zero-initialises the hash table.
+ * Returns NULL on allocation failure.
+ */
+HashTable* createHashTable(void) {
     HashTable* ht = (HashTable*)malloc(sizeof(HashTable));
     if (!ht) return NULL;
     for (int i = 0; i < 101; i++) {
@@ -13,43 +17,55 @@ HashTable* createHashTable() {
     return ht;
 }
 
-// hashFunction สำหรับ ID "BC-XXX"
+/*
+ * hashFunction
+ * Maps a patient ID string (e.g. "BC-042") to a bucket index [0, 100]
+ * using the djb2 algorithm (seed 5381, times-33 step).
+ */
 int hashFunction(const char* id) {
     unsigned long hash = 5381;
     int c;
     while ((c = *id++)) {
-        hash = ((hash << 5) + hash) + c; 
+        hash = ((hash << 5) + hash) + c;
     }
-    return hash % 101;
+    return (int)(hash % 101);
 }
 
-// การ Insert แบบ Chaining (เพิ่มที่หัว List จะเร็วที่สุด O(1)) [cite: 42, 80]
+/*
+ * hashTableInsert
+ * Prepends a new HashNode to the bucket chain — O(1) insertion.
+ * The hash table is the sole owner of patient data; do not free
+ * a patient while it is still in the table.
+ */
 void hashTableInsert(HashTable* ht, Patient* p) {
     if (!ht || !p) return;
-    
+
     int index = hashFunction(p->id);
-    
-    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
-    if (!newNode) return;
-    
-    newNode->patient = p;
-    // นำโหนดใหม่ไปชี้ที่หัวเดิม แล้วเอาหัวใหม่ชี้ที่โหนดนี้
-    newNode->next = ht->buckets[index];
-    ht->buckets[index] = newNode;
+
+    HashNode* node = (HashNode*)malloc(sizeof(HashNode));
+    if (!node) return;
+
+    node->patient    = p;
+    node->next       = ht->buckets[index];
+    ht->buckets[index] = node;
 }
 
-// การ Lookup (ค้นหาตามโซ่ Chaining)
+/*
+ * hashTableLookup
+ * Walks the chain at the computed bucket and compares IDs.
+ * Returns the matching Patient pointer, or NULL if not found.
+ */
 Patient* hashTableLookup(HashTable* ht, const char* id) {
     if (!ht || !id) return NULL;
-    
+
     int index = hashFunction(id);
-    HashNode* current = ht->buckets[index];
-    
-    while (current != NULL) {
-        if (strcmp(current->patient->id, id) == 0) {
-            return current->patient; // เจอคนไข้
+    HashNode* curr = ht->buckets[index];
+
+    while (curr != NULL) {
+        if (strcmp(curr->patient->id, id) == 0) {
+            return curr->patient;
         }
-        current = current->next;
+        curr = curr->next;
     }
-    return NULL; // ไม่พบในระบบ 
+    return NULL;
 }

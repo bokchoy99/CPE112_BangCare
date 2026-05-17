@@ -3,7 +3,8 @@
 
 #include "../patient/patient.h"
 
-void* createLinkedList(); 
-void linkedListInsert(Patient** head, Patient* p);
+/* Reuses Patient->next as the link pointer; no separate node wrapper needed. */
+void* createLinkedList(void);
+void  linkedListInsert(Patient** head, Patient* p);
 
 #endif

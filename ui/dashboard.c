@@ -7,96 +7,115 @@
 #include "../patient/patient.h"
 #include "../bed/bed_manager.h"
 
-/**
- * แสดง ID คนไข้ 3 คนล่าสุดที่เพิ่งเข้าสู่ระบบ
+/* -- Internal helpers ----------------------------------------- */
+
+static bool isWaitingForBed(PatientState state) {
+    return state == WAITING || state == IN_QUEUE;
+}
+
+/*
+ * displayUpcomingStream
+ * Shows the last 3 patients who registered but have not yet been
+ * assigned a bed, in reverse registration order (newest last).
  */
-void displayUpcomingStream() {
-    Patient* curr = (Patient*)gSystem.agingList; 
-    
-    if (curr == NULL) {
-        printf("Empty");
-        return;
-    }
+void displayUpcomingStream(void) {
+    Patient* curr = (Patient*)gSystem.agingList;
+    if (!curr) { printf("Empty"); return; }
 
-    Patient* stream[3] = {NULL, NULL, NULL};
-    int count = 0;
+    Patient* stream[3] = { NULL, NULL, NULL };
+    int      count     = 0;
 
-    // แก้ไขโลจิคตรงนี้: กรองเฉพาะคนที่ยังไม่ได้เตียง
     while (curr != NULL && count < 3) {
-        // ตรวจสอบสถานะ: ต้องยังไม่ได้เตียง (ALLOCATED)
-        if (curr->state == WAITING || curr->state == IN_QUEUE) {
-            stream[count] = curr;
-            count++;
+        if (isWaitingForBed(curr->state)) {
+            stream[count++] = curr;
         }
         curr = curr->next;
     }
 
-    if (count == 0) {
-        printf("Empty");
-        return;
-    }
+    if (count == 0) { printf("Empty"); return; }
 
+    /* Print oldest → newest with arrows. */
     for (int i = count - 1; i >= 0; i--) {
-        if (stream[i] != NULL) {
-            printf("%s", stream[i]->id); 
-            if (i > 0) printf(" <- ");
-        }
+        printf("%s [S%d]", stream[i]->id, stream[i]->severity);
+        if (i > 0) printf(" << ");
     }
 }
 
-/**
- * ฟังก์ชันหลักสำหรับวาด Dashboard
+/*
+ * displayDashboard
+ * Renders the full terminal dashboard:
+ *   - System status line (beds, tick, simulated time).
+ *   - ER and OPD bed grids.
+ *   - Upcoming stream (most recent waiting patients).
+ *   - Command prompt.
  */
-void displayDashboard() {
-    char buffer[50];
-    time_t t = (time_t)gSystem.simulatedTime;
-    struct tm *tm_info = localtime(&t);
-    strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M", tm_info);
+void displayDashboard(void) {
+    /* Format simulated wall-clock time for display. */
+    char     timeStr[50];
+    time_t   t      = (time_t)gSystem.simulatedTime;
+    struct tm* tmInfo = localtime(&t);
+    strftime(timeStr, sizeof(timeStr), "%d/%m/%Y %H:%M", tmInfo);
 
-    printf("\n===========================================================\n");
-    printf("       BANGCARE: HOSPITAL TRIAGE MANAGEMENT SYSTEM         \n");
-    printf("===========================================================\n");
-
-    int occupied = (gSystem.beds != NULL) ? gSystem.beds->occupiedBeds : 0;
+    int  occupied     = gSystem.beds ? gSystem.beds->occupiedBeds : 0;
+    int  totalBeds    = MAX_ER_BEDS + MAX_OPD_BEDS;
     long totalMinutes = (gSystem.simulatedTime - gSystem.baseTime) / 60;
 
-    // แก้ 13 → MAX_ER_BEDS + MAX_OPD_BEDS
-    printf(" Beds: [%02d/%d] | Tick: %d (%ld min) | Time: %s\n",
-        occupied, MAX_ER_BEDS + MAX_OPD_BEDS, gSystem.tickCount, totalMinutes, buffer);
-
+    printf("\n============================================================================\n");
+    printf("              BANGCARE : HOSPITAL TRIAGE MANAGEMENT SYSTEM\n");
+    printf("============================================================================\n");
+    printf(" Beds: [%02d/%02d] | Tick: %d (%ld min) | Time: %s\n",
+           occupied, totalBeds, gSystem.tickCount, totalMinutes, timeStr);
+    printf("----------------------------------------------------------------------------\n");
     printf(" [ BED ALLOCATION ]\n");
 
-    if (gSystem.beds != NULL) {
+    if (gSystem.beds) {
         BedNode* curr = gSystem.beds->head;
 
-        // ER Beds — วนตาม MAX_ER_BEDS
-        printf(" ER Beds  (S5)  : ");
-        for (int i = 0; i < MAX_ER_BEDS && curr != NULL; i++) {
-            if (curr->isOccupied && curr->patient != NULL) {
-                printf("[%s]", curr->patient->id);
-            } else {
-                printf("[  -  ]");
-            }
-            curr = curr->next;
+        printf(" ER  Beds (S5)   : ");
+        for (int i = 0; i < MAX_ER_BEDS && curr != NULL; i++, curr = curr->next) {
+            printf("[%s]", curr->isOccupied && curr->patient
+                           ? curr->patient->id : "  ---  ");
         }
         printf("\n");
 
-        // OPD Beds — วนตาม MAX_OPD_BEDS
-        printf(" OPD Beds (S1-4): ");
-        for (int i = 0; i < MAX_OPD_BEDS && curr != NULL; i++) {
-            if (curr->isOccupied && curr->patient != NULL) {
-                printf("[%s]", curr->patient->id);
-            } else {
-                printf("[  -  ]");
-            }
-            curr = curr->next;
+        printf(" OPD Beds (S1-4) : ");
+        for (int i = 0; i < MAX_OPD_BEDS && curr != NULL; i++, curr = curr->next) {
+            printf("[%s]", curr->isOccupied && curr->patient
+                           ? curr->patient->id : "  ---  ");
         }
         printf("\n");
     }
 
-    printf("-----------------------------------------------------------\n");
-    printf(" Upcoming Stream: ");
+    printf("----------------------------------------------------------------------------\n");
+    printf(" [ ACTIVITY LOG ] (last 5 events)\n");
+
+    FILE* logFile = fopen(LOG_FILE, "r");
+    if (logFile) {
+        /* Read up to last 5 lines using a circular buffer. */
+        char lines[5][256];
+        int  lineCount = 0;
+        int  idx       = 0;
+        while (fgets(lines[idx], sizeof(lines[idx]), logFile) != NULL) {
+            idx = (idx + 1) % 5;
+            if (lineCount < 5) lineCount++;
+        }
+        fclose(logFile);
+
+        /* Print in chronological order. */
+        int start = (lineCount < 5) ? 0 : idx;
+        for (int i = 0; i < lineCount; i++) {
+            int lineIdx = (start + i) % 5;
+            /* Strip trailing newline for clean display. */
+            lines[lineIdx][strcspn(lines[lineIdx], "\n")] = '\0';
+            printf("  %s\n", lines[lineIdx]);
+        }
+    } else {
+        printf("  (no log entries yet)\n");
+    }
+
+    printf("----------------------------------------------------------------------------\n");
+    printf(" [ INCOMING STREAM ] ");
     displayUpcomingStream();
-    printf("\n-----------------------------------------------------------\n");
+    printf("\n============================================================================\n");
     printf(" Command > ");
 }

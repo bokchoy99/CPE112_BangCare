@@ -1,0 +1,77 @@
+=== BANGCARE SYSTEM LOG STARTED ===
+[12:02:21] [SYS ] [BED_MGR ] All beds filled with dummy patients.
+[12:02:21] [INFO] [SYSTEM  ] Patient registered
+[12:02:21] [INFO] [SYSTEM  ] Patient registered
+[12:02:21] [INFO] [SYSTEM  ] Patient registered
+[12:02:21] [INFO] [SYSTEM  ] Patient registered
+[12:12:21] [WARN] [AGING   ] BC-004 S5 waiting too long (5 ticks) - ER unavailable
+[12:12:21] [WARN] [AGING   ] BC-003 promoted to S2 (waited 5 ticks)
+[12:12:21] [WARN] [AGING   ] BC-002 promoted to S4 (waited 5 ticks)
+[12:12:21] [WARN] [AGING   ] BC-001 S5 waiting too long (5 ticks) - ER unavailable
+[12:22:21] [WARN] [AGING   ] BC-004 S5 waiting too long (10 ticks) - ER unavailable
+[12:22:21] [WARN] [AGING   ] BC-003 promoted to S3 (waited 10 ticks)
+[12:22:21] [WARN] [AGING   ] BC-002 promoted to S5 (waited 10 ticks)
+[12:22:21] [WARN] [AGING   ] BC-001 S5 waiting too long (10 ticks) - ER unavailable
+[12:22:21] [INFO] [BED_MGR ] Bed #1 is now free
+[12:22:21] [INFO] [BED_MGR ] S5 patient assigned to ER bed
+[12:22:21] [INFO] [SYSTEM  ] Auto-allocated bed for BC-001 (S5)
+[12:22:21] [INFO] [BED_MGR ] Bed #2 is now free
+[12:22:21] [INFO] [BED_MGR ] S5 patient assigned to ER bed
+[12:22:21] [INFO] [SYSTEM  ] Auto-allocated bed for BC-004 (S5)
+[12:32:21] [WARN] [AGING   ] BC-003 promoted to S4 (waited 15 ticks)
+[12:32:21] [WARN] [AGING   ] BC-002 S5 waiting too long (15 ticks) - ER unavailable
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-003 discharged from bed #3 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #3 is now free
+[12:32:21] [INFO] [BED_MGR ] S5 patient assigned to ER bed
+[12:32:21] [INFO] [SYSTEM  ] Auto-allocated bed for BC-002 (S5)
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-004 discharged from bed #4 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #4 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-005 discharged from bed #5 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #5 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-006 discharged from bed #6 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #6 is now free
+[12:32:21] [INFO] [BED_MGR ] Patient assigned to OPD bed
+[12:32:21] [INFO] [SYSTEM  ] Auto-allocated bed for BC-003 (S4)
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-007 discharged from bed #7 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #7 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-008 discharged from bed #8 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #8 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-009 discharged from bed #9 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #9 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-010 discharged from bed #10 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #10 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-011 discharged from bed #11 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #11 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-012 discharged from bed #12 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #12 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-013 discharged from bed #13 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #13 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-014 discharged from bed #14 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #14 is now free
+[12:32:21] [INFO] [SYSTEM  ] Patient DM-015 discharged from bed #15 (wait: 0 ticks)
+[12:32:21] [INFO] [BED_MGR ] Bed #15 is now free
+[12:52:21] [INFO] [SYSTEM  ] Patient BC-001 discharged from bed #1 (wait: 10 ticks)
+[12:52:21] [INFO] [BED_MGR ] Bed #1 is now free
+[12:52:21] [INFO] [SYSTEM  ] Patient BC-004 discharged from bed #2 (wait: 10 ticks)
+[12:52:21] [INFO] [BED_MGR ] Bed #2 is now free
+[12:52:21] [INFO] [SYSTEM  ] Patient BC-003 discharged from bed #6 (wait: 15 ticks)
+[12:52:21] [INFO] [BED_MGR ] Bed #6 is now free
+[13:02:21] [INFO] [SYSTEM  ] Patient BC-002 discharged from bed #3 (wait: 15 ticks)
+[13:02:21] [INFO] [BED_MGR ] Bed #3 is now free
+[14:02:21] [SYS ] [BED_MGR ] All beds filled with dummy patients.
+[14:02:21] [INFO] [SYSTEM  ] Patient registered
+[14:02:21] [INFO] [SYSTEM  ] Patient registered
+[14:02:21] [INFO] [SYSTEM  ] Patient registered
+[14:12:21] [WARN] [AGING   ] BC-007 promoted to S4 (waited 5 ticks)
+[14:12:21] [WARN] [AGING   ] BC-006 S5 waiting too long (5 ticks) - ER unavailable
+[14:12:21] [WARN] [AGING   ] BC-005 promoted to S2 (waited 5 ticks)
+[14:12:21] [INFO] [BED_MGR ] Bed #6 is now free
+[14:12:21] [INFO] [BED_MGR ] S5 patient assigned to OPD bed (ER full)
+[14:12:21] [INFO] [SYSTEM  ] Auto-allocated bed for BC-006 (S5)
+[14:12:21] [INFO] [BED_MGR ] Bed #9 is now free
+[14:12:21] [INFO] [BED_MGR ] Patient assigned to OPD bed
+[14:12:21] [INFO] [SYSTEM  ] Auto-allocated bed for BC-007 (S4)
+[14:12:21] [INFO] [BED_MGR ] Bed #5 is now free
+[14:12:21] [INFO] [SYSTEM  ] BC-006 upgraded from OPD bed #6 to ER bed #5
+[14:12:21] [INFO] [BED_MGR ] Patient assigned to OPD bed
+[14:12:21] [INFO] [SYSTEM  ] Auto-allocated bed for BC-005 (S2)

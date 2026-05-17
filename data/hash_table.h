@@ -3,19 +3,23 @@
 
 #include "../patient/patient.h"
 
-// โครงสร้างของ Hash Node สำหรับทำ Chaining (กรณี Hash Collision)
+/* -- Structures ----------------------------------------------- */
+
+/* Single node in a collision chain. */
 typedef struct HashNode {
-    Patient* patient;
+    Patient*         patient;
     struct HashNode* next;
 } HashNode;
 
+/* Fixed-size bucket array; collisions resolved by chaining. */
 typedef struct {
-    HashNode* buckets[101]; // ขนาดตาม HASH_TABLE_SIZE ใน config.h
+    HashNode* buckets[101]; /* Size follows HASH_TABLE_SIZE in config.h */
 } HashTable;
 
-HashTable* createHashTable();
-int hashFunction(const char* id);
-void hashTableInsert(HashTable* ht, Patient* p);
-Patient* hashTableLookup(HashTable* ht, const char* id);
+/* -- Prototypes ----------------------------------------------- */
+HashTable* createHashTable(void);
+int        hashFunction(const char* id);
+void       hashTableInsert(HashTable* ht, Patient* p);
+Patient*   hashTableLookup(HashTable* ht, const char* id);
 
 #endif

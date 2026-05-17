@@ -1,7 +1,7 @@
 #ifndef DASHBOARD_H
 #define DASHBOARD_H
 
-void displayDashboard();
-void displayUpcomingStream();
+void displayDashboard(void);
+void displayUpcomingStream(void);
 
 #endif
